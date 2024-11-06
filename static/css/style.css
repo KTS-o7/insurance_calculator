@@ -1,0 +1,64 @@
+:root {
+  --bg-color: #f8f9fa;
+  --text-color: #212529;
+  --card-bg: #ffffff;
+  --border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+  --bg-color: #212529;
+  --text-color: #f8f9fa;
+  --card-bg: #343a40;
+  --border-color: rgba(255, 255, 255, 0.1);
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: all 0.3s ease;
+}
+
+.card {
+  background-color: var(--card-bg);
+  box-shadow: 0 2px 4px var(--border-color);
+}
+
+#comparison-chart1,
+#comparison-chart2 {
+  width: 100%;
+  min-height: 400px;
+}
+
+.table {
+  color: var(--text-color);
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+
+  .table-responsive {
+    font-size: 0.9rem;
+  }
+
+  #comparison-chart1,
+  #comparison-chart2 {
+    width: 100%;
+    height: auto;
+    min-height: 300px;
+  }
+}
+
+.theme-switch {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}

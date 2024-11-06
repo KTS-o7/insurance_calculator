@@ -1,0 +1,4 @@
+Flask==3.0.0
+numpy-financial==1.0.0
+plotly==5.18.0
+pandas==2.1.3
