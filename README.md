@@ -1,6 +1,6 @@
 # Insurance Returns Calculator 🧮
 
-A sophisticated web application designed to help users make informed decisions about their insurance investments by comparing returns across different investment options.
+A web application designed to help users make informed decisions about their insurance investments by comparing returns across different investment options.
 
 ## 🌟 Key Features
 
@@ -8,7 +8,11 @@ A sophisticated web application designed to help users make informed decisions a
 - **Investment Comparisons** with debt funds and fixed deposits
 - **Interactive Visualizations** using dynamic charts
 - **Year-wise Growth Analysis**
-- **Real-time Comparison** of investment options
+- **Real-time Comparison** of investment options like Term Insurance, FD, and Debt Funds
+
+## Live Link
+
+> [Insurance Calculator Hosted on pythonanywhere](https://makesensiblefindeci.pythonanywhere.com/)
 
 ## 🛠️ Technical Requirements
 
@@ -59,7 +63,7 @@ python app.py
 
 - Policy Summary
 - IRR Calculations
-- Loss Potential Analysis
+- Opportunity Potential Analysis
 - Detailed Investment Comparisons
 - Interactive Charts
 - Year-wise Growth Tables
@@ -81,4 +85,4 @@ MIT License
 
 ## 📞 Contact
 
-shentharkrishnatejaswi@gmail.com
+[Email](mailto:shentharkrishnatejaswi@gmail.com)
