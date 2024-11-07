@@ -7,7 +7,7 @@ function toggleTheme() {
   const newTheme = currentTheme === "dark" ? "light" : "dark";
   html.setAttribute("data-theme", newTheme);
   localStorage.setItem("theme", newTheme);
-  updateChartsTheme(newTheme);
+  updateChartsTheme(newTheme); 
 }
 
 function initTheme() {
@@ -16,95 +16,72 @@ function initTheme() {
   updateChartsTheme(savedTheme);
 }
 
-function updateChartsTheme(theme) {
-  const chartBg = theme === "dark" ? "#343a40" : "#ffffff";
-  const chartText = theme === "dark" ? "#f8f9fa" : "#212529";
-  const updateLayout = {
-    paper_bgcolor: chartBg,
-    plot_bgcolor: chartBg,
-    font: { color: chartText },
-  };
-
-  if (typeof Plotly !== "undefined") {
-    Plotly.relayout("comparison-chart1", updateLayout);
-    Plotly.relayout("comparison-chart2", updateLayout);
-  }
-}
-
 // Chart configuration
 const chartConfig = {
   responsive: true,
   displayModeBar: false,
   toImageButtonOptions: {
-    format: "png",
+    format: "svg",
     filename: "chart",
     height: null,
     width: null,
   },
 };
 
-// Initialize charts if on results page
 function initCharts(chartData1, chartData2) {
-  if (!chartData1 || !chartData2) return;
-
-  const theme = document.documentElement.getAttribute("data-theme");
-  const chartBg = theme === "dark" ? "#343a40" : "#ffffff";
-  const chartText = theme === "dark" ? "#f8f9fa" : "#212529";
-
-  chartData1.layout = {
-    title: "Investment Returns Comparison",
-    barmode: "group",
-    yaxis: { title: "Amount (₹)" },
-    paper_bgcolor: chartBg,
-    plot_bgcolor: chartBg,
-    font: { color: chartText },
-    autosize: true,
-    margin: {
-      l: 50,
-      r: 20,
-      b: 50,
-      t: 50,
-      pad: 4,
-    },
+  const chartConfig = {
+    responsive: true,
+    displayModeBar: false,
   };
 
-  chartData2.layout = {
-    title: "Year-wise Growth Comparison",
-    xaxis: { title: "Year" },
-    yaxis: { title: "Amount (₹)" },
-    paper_bgcolor: chartBg,
-    plot_bgcolor: chartBg,
-    font: { color: chartText },
-    autosize: true,
-    margin: {
-      l: 50,
-      r: 20,
-      b: 50,
-      t: 50,
-      pad: 4,
-    },
-  };
+  try {
+    // Create charts first
+    Plotly.newPlot(
+      "comparison-chart1",
+      chartData1.data,
+      chartData1.layout,
+      chartConfig
+    );
+    Plotly.newPlot(
+      "comparison-chart2",
+      chartData2.data,
+      chartData2.layout,
+      chartConfig
+    );
+    console.log("Charts initialized");
+    return true;
+  } catch (error) {
+    console.error("Error initializing charts:", error);
+    return false;
+  }
+}
 
-  Plotly.newPlot(
-    "comparison-chart1",
-    chartData1.data,
-    chartData1.layout,
-    chartConfig
-  );
-  Plotly.newPlot(
-    "comparison-chart2",
-    chartData2.data,
-    chartData2.layout,
-    chartConfig
-  );
+function updateChartsTheme(isDark) {
+  // Check if chart elements exist first
+  const chart1 = document.getElementById("comparison-chart1");
+  const chart2 = document.getElementById("comparison-chart2");
+  isDark = isDark === "dark";
+  if (!chart1 || !chart2) return;
+
+  Plotly.relayout("comparison-chart1", {
+    paper_bgcolor: isDark ? "#333" : "#fff",
+    plot_bgcolor: isDark ? "#333" : "#fff",
+    font: { color: isDark ? "#fff" : "#000" },
+  });
+  Plotly.relayout("comparison-chart2", {
+    paper_bgcolor: isDark ? "#333" : "#fff",
+    plot_bgcolor: isDark ? "#333" : "#fff",
+    font: { color: isDark ? "#fff" : "#000" },
+  });
 }
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", () => {
-  initTheme();
-
-  // Only initialize charts if we're on the results page
+  // Initialize charts first if data exists
   if (typeof chartData1 !== "undefined" && typeof chartData2 !== "undefined") {
-    initCharts(chartData1, chartData2);
+    const chartsInitialized = initCharts(chartData1, chartData2);
+    if (chartsInitialized) {
+      initTheme(); // Only initialize theme after charts are ready
+    }
   }
 });

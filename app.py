@@ -65,8 +65,8 @@ class InsuranceCalculator:
             ],
             'Real Value': [
                 self.calculate_real_value(maturity, total_term),
-                self.calculate_real_value(self.calculate_fixed_deposit_returns(investment_premium, premium_term, total_term, self.debt_fund_rate), total_term)+maturity,
-                self.calculate_real_value(self.calculate_fixed_deposit_returns(investment_premium, premium_term, total_term, self.fd_rate), total_term)+maturity
+                self.calculate_real_value(self.calculate_fixed_deposit_returns(investment_premium, premium_term, total_term, self.debt_fund_rate)+maturity, total_term),
+                self.calculate_real_value(self.calculate_fixed_deposit_returns(investment_premium, premium_term, total_term, self.fd_rate)+maturity, total_term)
             ],
         }
         return pd.DataFrame(data)
@@ -146,4 +146,4 @@ def index():
     return render_template('index.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
