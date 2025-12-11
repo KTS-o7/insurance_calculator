@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body>
@@ -34,6 +35,20 @@
                     <span class="winner-badge b">Portfolio B</span> outperformed by
                     <strong>₹{{ "{:,.0f}".format(results.delta.final_value_diff|abs) }}</strong>
                     {% endif %}
+                </div>
+            </section>
+
+            <!-- AI Insight Card -->
+            <section class="card ai-card">
+                <div class="card-header">
+                    <h3>🤖 AI Portfolio Comparison</h3>
+                    <span class="badge ai-badge">Powered by Moonshot AI</span>
+                </div>
+                <div class="card-body">
+                    <div id="ai-loading" class="ai-loading">
+                        <span>Comparing portfolios with AI...</span>
+                    </div>
+                    <div id="ai-content" class="ai-content" style="display: none;"></div>
                 </div>
             </section>
 
@@ -196,6 +211,38 @@
         // Apply saved theme
         const saved = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         document.documentElement.setAttribute('data-theme', saved);
+
+        // Fetch AI Insight
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/get-ai-insight', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    context: 'portfolio_compare',
+                    metrics: {
+                        diff_value: {{ results.delta.final_value_diff | abs }},
+                winner: '{{ results.delta.winner }}',
+                monthly_sip: {{ results.monthly_sip }},
+            portfolio_a_type: '{{ results.portfolio_a.portfolio_type }}',
+            portfolio_a_return: {{ results.portfolio_a.return_pct | round(1) }},
+            portfolio_b_type: '{{ results.portfolio_b.portfolio_type }}',
+            portfolio_b_return: {{ results.portfolio_b.return_pct | round(1) }}
+                    }
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('ai-loading').style.display = 'none';
+                const contentDiv = document.getElementById('ai-content');
+                contentDiv.style.display = 'block';
+
+                contentDiv.innerHTML = marked.parse(data.insight);
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('ai-loading').innerHTML = "Insight unavailable.";
+            });
+        });
     </script>
 </body>
 

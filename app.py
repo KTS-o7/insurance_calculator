@@ -4,6 +4,18 @@ import pandas as pd
 from calculator import InsuranceCalculator
 from sip_calculator import SIPCalculator
 from datetime import date, timedelta
+import os
+from groq import Groq
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Initialize Groq Client
+# Using user specified model or falling back to a versatile Llama model on Groq
+GROQ_MODEL = "moonshotai/kimi-k2-instruct" 
+client = Groq(
+    api_key=os.environ.get("GROQ_API_KEY"),
+)
 
 app = Flask(__name__)
 
@@ -41,7 +53,8 @@ def index():
                                        years=years,
                                        annual_sip=annual_sip,
                                        monthly_sip=monthly_sip,
-                                       endowment_premium=endowment_premium_needed)
+                                       endowment_premium=endowment_premium_needed,
+                                       return_rate=return_rate)
 
             else: # Comparison Mode
                 premium = float(request.form['premium'])
@@ -105,6 +118,10 @@ def index():
                                        real_btir=real_value_btir,
                                        capital_gains_tax=capital_gains_tax,
                                        tax_bracket=tax_bracket,
+
+                                       premium=premium,
+                                       years=total_term,
+                                       return_rate=investment_return_rate,
                                        chart_bar=fig_bar.to_json(),
                                        chart_area=fig_area.to_json())
 
@@ -502,6 +519,128 @@ def api_compare_portfolios():
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 400
+
+
+@app.route('/api/get-ai-insight', methods=['POST'])
+def get_ai_insight():
+    """Get AI explanation and suggestion based on analysis data"""
+    try:
+        data = request.get_json()
+        context_type = data.get('context', 'general')
+        metrics = data.get('metrics', {})
+        
+        # Construct Prompt based on context
+        prompt = ""
+        
+        # Prepare System Message
+        system_msg = "You are a professional financial advisor. Your task is to provide clear, actionable advice in Markdown format. Do NOT output JSON. Do NOT analyze the rhetorical devices. Just give the advice."
+
+        if context_type == 'comparison':
+            prompt = f"""
+            Analyze this insurance vs investment comparison:
+
+            **UserData:**
+            - Term: {metrics.get('years')} years
+            - Annual Premium: ₹{metrics.get('annual_outflow')}
+            - Endowment Maturity: ₹{metrics.get('endowment_value')}
+            - BTIR (Term+Invest) Value: ₹{metrics.get('btir_value')}
+            - Endowment Return (IRR): {metrics.get('endowment_irr')}%
+            - Market Return Assumed: {metrics.get('return_rate')}%
+            - Opportunity Cost: ₹{metrics.get('opportunity_cost')}
+
+            **Your Task:**
+            1. **The Verdict:** plainly state which option wins and by how much.
+            2. **Inflation Reality:** Explain that {metrics.get('endowment_irr')}% return might not beat inflation (typically 6-7%), meaning purchasing power goes down.
+            3. **Recommendation:** Suggest 'Buy Term + Invest Rest' if the math supports it strongly.
+            4. **Disclaimer:** "Not financial advice."
+
+            Output strictly in Markdown. bold the key numbers.
+            """
+            
+        elif context_type == 'sip':
+            prompt = f"""
+            Analyze this SIP Projection:
+
+            **UserData:**
+            - Monthly Investment: ₹{metrics.get('monthly_sip')}
+            - Duration: {metrics.get('years')} years
+            - Expected Return: {metrics.get('return_rate')}%
+            - Total Invested: ₹{metrics.get('total_invested')}
+            - Final Corpus: ₹{metrics.get('estimated_value')}
+            - Wealth Created: ₹{metrics.get('wealth_gained')}
+
+            **Your Task:**
+            1. **Wealth Assessment:** Is this a good corpus?
+            2. **Power of Compounding:** Highlight that wealth gained (₹{metrics.get('wealth_gained')}) is money working for them.
+            3. **Pro Tip:** Suggest a 10% annual "Step-Up" SIP. Estimate how much more they could make (rule of thumb: almost double the corpus in long run).
+            4. **Disclaimer.**
+
+            Output as Markdown. Keep it encouraging!
+            """
+
+        elif context_type == 'portfolio_compare':
+            diff = metrics.get('diff_value')
+            winner = metrics.get('winner')
+            prompt = f"""
+            Compare two portfolios:
+
+            **Winner:** Portfolio {winner} (Wins by ₹{diff})
+            
+            **Portfolio A:** {metrics.get('portfolio_a_type')} | Return: {metrics.get('portfolio_a_return')}%
+            **Portfolio B:** {metrics.get('portfolio_b_type')} | Return: {metrics.get('portfolio_b_return')}%
+
+            **Your Task:**
+            1. **Why it won:** Briefly explain (e.g., higher equity allocation usually wins in long term).
+            2. **Risk vs Reward:** Higher returns usually mean higher volatility. Mention this trade-off.
+            3. **Strategy:** Recommend sticking to the asset allocation that matches their risk appetite.
+            4. **Disclaimer.**
+
+            Output as Markdown.
+            """
+
+        elif context_type == 'goal':
+            prompt = f"""
+            Financial Goal Analysis:
+            
+            **Goal:** Reach ₹{metrics.get('target_amount')} in {metrics.get('years')} years.
+            **Required SIP:** ₹{metrics.get('required_sip')} / month.
+            **Assumed Return:** {metrics.get('return_rate')}%
+
+            **Your Task:**
+            1. **Reality Check:** Is this SIP amount typically manageable?
+            2. **Optimization:** Suggest increasing the investment realized return (if conservative) or extending the timeline to lower the burden.
+            3. **Disclaimer.**
+
+            Output as Markdown.
+            """
+        
+        else:
+            return jsonify({'error': 'Invalid context'}), 400
+
+        # Call Groq API
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_msg,
+                },
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            model=GROQ_MODEL,
+            temperature=0.7,
+            max_tokens=300,
+        )
+
+        explanation = chat_completion.choices[0].message.content
+        return jsonify({'insight': explanation})
+
+    except Exception as e:
+        print(f"AI API Error: {e}")
+        # Fallback response if API fails
+        return jsonify({'insight': "**AI Insight Unavailable.**\n\nWe couldn't reach our financial brain at the moment. Please check your API key or internet connection.\n\n_Disclaimer: Standard financial disclaimers apply._"}), 200
 
 
 @app.route('/sip/compare', methods=['GET', 'POST'])

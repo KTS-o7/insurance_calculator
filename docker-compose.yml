@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: insurance_calculator
+    restart: always
+    ports:
+      - "3434:5000"
+    environment:
+      # Pass the API key from the host environment
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    volumes:
+      # Optional: Mount code for development (remove in strict production)
+      - .:/app
