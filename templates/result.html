@@ -1,185 +1,152 @@
 <!DOCTYPE html>
-<html data-theme="light">
-  <head>
-    <title>Insurance Returns Comparison</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="{{ url_for('static', filename='css/style.css') }}"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  </head>
-  <body>
-    <button
-      class="btn btn-outline-primary theme-switch"
-      onclick="toggleTheme()"
-    >
-      <i class="fas fa-moon"></i>
-      <span class="d-none d-md-inline">Toggle Theme</span>
-    </button>
+<html lang="en">
 
-    <div class="container mt-5">
-      <h2 class="mb-4">Investment Comparison Results</h2>
-      <!-- Policy Summary -->
-      <div class="card mb-4">
-        <div class="card-body">
-          <h4 class="mb-3">Policy Details</h4>
-          <div class="row g-3">
-            <div class="col-12 col-sm-6 col-lg-3">
-              <div class="p-3 border rounded h-100">
-                <p class="mb-1"><strong>Annual Premium</strong></p>
-                <p class="h5">
-                  ₹{{
-                  "{:,.2f}".format(detailed_comparison[0]['Total_Premium_Paid']
-                  / detailed_comparison[0]['Premium Payment Years']) }} rupees
-                </p>
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-              <div class="p-3 border rounded h-100">
-                <p class="mb-1"><strong>Premium Term</strong></p>
-                <p class="h5">
-                  {{ detailed_comparison[0]['Premium Payment Years'] }} years
-                </p>
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-              <div class="p-3 border rounded h-100">
-                <p class="mb-1"><strong>Policy Term</strong></p>
-                <p class="h5">
-                  {{ detailed_comparison[0]['Total Policy Term'] }} years
-                </p>
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-              <div class="p-3 border rounded h-100">
-                <p class="mb-1"><strong>Insurance Coverage</strong></p>
-                <p class="h5">
-                  ₹{{
-                  "{:,.2f}".format(detailed_comparison[0]['Insurance_Coverage'])
-                  }}
-                </p>
-              </div>
-            </div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comparison Analysis</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+  <div class="app-container">
+    <header class="no-print">
+      <div class="logo">
+        <span class="icon">📊</span>
+        <h1>Analysis Report</h1>
+      </div>
+      <div class="header-actions">
+        <button onclick="window.print()" class="btn-secondary small">🖨️ Print Report</button>
+        <a href="/" class="btn-secondary small">New Calculation</a>
+      </div>
+    </header>
+
+    <main class="results-grid">
+      <!-- Key Metric: Opportunity Cost -->
+      <section class="card highlight-card">
+        <div class="card-header">
+          <h3>Potential Gain Missed (Post-Tax)</h3>
+          <span class="badge warning">Opportunity Cost</span>
+        </div>
+        <div class="card-body large-stat">
+          {% if opportunity_cost > 0 %}
+          <span class="currency">₹</span>{{ "{:,.0f}".format(opportunity_cost) }}
+          <p class="crypto-text">Net Loss compared to Mutual Funds</p>
+          {% else %}
+          <span class="currency">₹</span>0
+          <p class="crypto-success">The Endowment plan wins!</p>
+          {% endif %}
+        </div>
+      </section>
+
+      <!-- Quick Stats Row -->
+      <section class="stat-row">
+        <div class="stat-box">
+          <label>Endowment IRR</label>
+          <div class="value">{{ "{:.2f}".format(irr) }}%</div>
+        </div>
+        <div class="stat-box">
+          <label>Term Insurance Cost</label>
+          <div class="value">₹{{ "{:,.0f}".format(term_cost) }}/yr</div>
+        </div>
+        <div class="stat-box">
+          <label>Investable Surplus</label>
+          <div class="value">₹{{ "{:,.0f}".format(investable_surplus) }}/yr</div>
+        </div>
+      </section>
+
+      <!-- Taxation Breakdown -->
+      {% if is_taxable or tax_paid_btir > 0 %}
+      <section class="card">
+        <h3>Tax Impact Analysis</h3>
+        <table class="simple-table">
+          <tr>
+            <th>Metric</th>
+            <th>Endowment</th>
+            <th>Mutual Funds</th>
+          </tr>
+          <tr>
+            <td>Maturity Value</td>
+            <td>₹{{ "{:,.0f}".format(maturity) }}</td>
+            <td>₹{{ "{:,.0f}".format(btir_value) }}</td>
+          </tr>
+          <tr>
+            <td>Tax Paid (Est.)</td>
+            <td class="negative">- ₹{{ "{:,.0f}".format(tax_paid_endowment) }}</td>
+            <td class="negative">- ₹{{ "{:,.0f}".format(tax_paid_btir) }}</td>
+          </tr>
+          <tr>
+            <td><strong>Net In Hand</strong></td>
+            <td><strong>₹{{ "{:,.0f}".format(endowment_post_tax) }}</strong></td>
+            <td><strong>₹{{ "{:,.0f}".format(btir_post_tax) }}</strong></td>
+          </tr>
+        </table>
+        <p class="footnote">
+          {% if is_taxable %}
+          *Endowment Premium > 5L, so maturity is taxable at {{ tax_bracket }}%.
+          {% else %}
+          *Endowment is Tax Free u/s 10(10D).
+          {% endif %}
+          Mutual Funds taxed at {{ capital_gains_tax }}% LTCG on gains.
+        </p>
+      </section>
+      {% endif %}
+
+      <!-- Comparison Cards -->
+      <section class="comparison-section">
+        <div class="plan-card endowment">
+          <h4>Endowment Plan</h4>
+          <div class="plan-metric">
+            <span>Net Post-Tax Value</span>
+            <strong>₹{{ "{:,.0f}".format(endowment_post_tax) }}</strong>
+          </div>
+          <div class="plan-metric">
+            <span>Real Purchasing Power</span>
+            <strong class="faded">₹{{ "{:,.0f}".format(real_endowment) }}</strong>
           </div>
         </div>
-      </div>
 
-      <!-- IRR Card -->
-      <div class="card mb-4">
-        <div class="card-body">
-          <h4>Internal Rate of Return (IRR): {{ "{:.2f}".format(irr) }}%</h4>
-          <p class="text-muted">
-            This is the annualized return of your endowment plan
-          </p>
-        </div>
-      </div>
-
-      <!-- Opportunity Cost Alert -->
-      <div class="alert alert-warning mb-4">
-        <h4>Potential Loss: ₹{{ "{:,.2f}".format(opportunity_cost) }}</h4>
-        <p>Amount you could lose compared to better investment options</p>
-      </div>
-
-      <!-- Detailed Comparison -->
-      <div class="card mb-4">
-        <div class="card-body">
-          <h4>Detailed Comparison</h4>
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Investment Type</th>
-                  <th>Premium Payment Years</th>
-                  <th>Total Policy Term</th>
-                  <th>Total Premium Paid</th>
-                  <th>Insurance Coverage</th>
-                  <th>Final Amount</th>
-                  <th>Real Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for row in detailed_comparison %}
-                <tr>
-                  <td>{{ row['Investment Type'] }}</td>
-                  <td>{{ row['Premium Payment Years'] }}</td>
-                  <td>{{ row['Total Policy Term'] }}</td>
-                  <td>₹{{ "{:,.2f}".format(row['Total_Premium_Paid']) }}</td>
-                  <td>₹{{ "{:,.2f}".format(row['Insurance_Coverage']) }}</td>
-                  <td>₹{{ "{:,.2f}".format(row['Final Amount']) }}</td>
-                  <td>₹{{ "{:,.2f}".format(row['Real Value']) }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+        <div class="plan-card btir">
+          <h4>Buy Term + Invest Rest</h4>
+          <div class="plan-metric">
+            <span>Net Post-Tax Value</span>
+            <strong>₹{{ "{:,.0f}".format(btir_post_tax) }}</strong>
+          </div>
+          <div class="plan-metric">
+            <span>Real Purchasing Power</span>
+            <strong class="faded">₹{{ "{:,.0f}".format(real_btir) }}</strong>
           </div>
         </div>
-      </div>
+      </section>
 
       <!-- Charts -->
-      <div class="card mb-4">
-        <div class="card-body">
-          <h4>Value Comparison</h4>
-          <div id="comparison-chart1"></div>
+      <section class="charts-container">
+        <div class="chart-card">
+          <h3>Liquidity / Surrender Analysis</h3>
+          <p class="chart-desc">Cash available if you exit in any year (The "Liquidity Trap")</p>
+          <div id="chart-area"></div>
         </div>
-      </div>
-
-      <div class="card mb-4">
-        <div class="card-body">
-          <h4>Year-wise Growth Comparison</h4>
-          <div id="comparison-chart2"></div>
+        <div class="chart-card">
+          <h3>Wealth Accumulation (Post-Tax)</h3>
+          <div id="chart-bar"></div>
         </div>
-      </div>
+      </section>
 
-      <!-- Year-wise Table -->
-      <div class="card mb-4">
-        <div class="card-body">
-          <h4>Year by Year Comparison</h4>
-          <div class="table-responsive">
-            <table class="table table-sm">
-              <thead>
-                <tr>
-                  <th>Year</th>
-                  <th>Endowment Value</th>
-                  <th>Better Investment</th>
-                  <th>Difference</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for row in yearly_comparison %}
-                <tr>
-                  <td>{{ row['Year'] }}</td>
-                  <td>₹{{ "{:,.2f}".format(row['Endowment Value']) }}</td>
-                  <td>₹{{ "{:,.2f}".format(row['Better Investment']) }}</td>
-                  <td
-                    class="{% if row['Difference'] > 0 %}text-danger{% endif %}"
-                  >
-                    ₹{{ "{:,.2f}".format(row['Difference']) }}
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+    </main>
+  </div>
 
-      <a href="/" class="btn btn-primary mb-5">Calculate Another</a>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Add this script block before including charts.js -->
-    <script>
-      const chartData1 = {{ chart1_json | safe }};
-      const chartData2 = {{ chart2_json | safe }};
-    </script>
-    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
-  </body>
+  <script>
+    const chartData1 = {{ chart_bar | safe }};
+    const chartData2 = {{ chart_area | safe }};
+
+    Plotly.newPlot('chart-bar', chartData1.data, chartData1.layout, { responsive: true, displayModeBar: false });
+    Plotly.newPlot('chart-area', chartData2.data, chartData2.layout, { responsive: true, displayModeBar: false });
+
+    const saved = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', saved);
+  </script>
+</body>
+
 </html>

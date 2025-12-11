@@ -1,64 +1,507 @@
 :root {
-  --bg-color: #f8f9fa;
-  --text-color: #212529;
-  --card-bg: #ffffff;
-  --border-color: rgba(0, 0, 0, 0.1);
+    --primary: #4a90e2;
+    --primary-dark: #357abd;
+    --accent: #ff6b6b;
+    --success: #51cf66;
+    --bg-color: #f8f9fa;
+    --surface-color: #ffffff;
+    --text-primary: #2d3436;
+    --text-secondary: #636e72;
+    --border-color: #dfe6e9;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.08);
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --font-main: 'Outfit', sans-serif;
 }
 
 [data-theme="dark"] {
-  --bg-color: #212529;
-  --text-color: #f8f9fa;
-  --card-bg: #343a40;
-  --border-color: rgba(255, 255, 255, 0.1);
+    --bg-color: #0f172a;
+    --surface-color: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --border-color: #334155;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 body {
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  transition: all 0.3s ease;
+    font-family: var(--font-main);
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 800px;
+    padding: 2rem;
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logo h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-primary);
+    padding: 0.5rem;
+    border-radius: 50%;
+}
+
+.theme-toggle:hover {
+    background-color: var(--border-color);
+}
+
+[data-theme="light"] .sun-icon {
+    display: none;
+}
+
+[data-theme="dark"] .moon-icon {
+    display: none;
+}
+
+/* Hero */
+.hero-section {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.hero-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.hero-section p {
+    color: var(--text-secondary);
+}
+
+/* Form */
+.calculator-form {
+    background-color: var(--surface-color);
+    padding: 2rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+input,
+select {
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.2rem;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+/* Results Page */
+.results-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 }
 
 .card {
-  background-color: var(--card-bg);
-  box-shadow: 0 2px 4px var(--border-color);
+    background-color: var(--surface-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
 }
 
-#comparison-chart1,
-#comparison-chart2 {
-  width: 100%;
-  min-height: 400px;
+.highlight-card {
+    background: linear-gradient(135deg, var(--surface-color), rgba(74, 144, 226, 0.05));
+    border: 1px solid var(--border-color);
 }
 
-.table {
-  color: var(--text-color);
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
 }
 
-@media (max-width: 768px) {
-  .container {
-    padding: 10px;
-  }
+.badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
 
-  .table-responsive {
-    font-size: 0.9rem;
-  }
+.badge.warning {
+    background-color: rgba(255, 107, 107, 0.1);
+    color: var(--accent);
+}
 
-  #comparison-chart1,
-  #comparison-chart2 {
+.large-stat {
+    text-align: center;
+}
+
+.large-stat .currency {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    vertical-align: top;
+    margin-right: 2px;
+}
+
+.large-stat {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.large-stat p {
+    font-size: 1rem;
+    font-weight: 400;
+    margin-top: 0.5rem;
+}
+
+.crypto-text {
+    color: var(--accent);
+}
+
+.crypto-success {
+    color: var(--success);
+}
+
+/* Stat Row */
+.stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.stat-box {
+    background-color: var(--surface-color);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-box label {
+    display: block;
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+}
+
+.stat-box .value {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Comparison Section */
+.comparison-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.plan-card {
+    background-color: var(--surface-color);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    border: 2px solid transparent;
+    /* Reserve space */
+}
+
+.plan-card h4 {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.plan-card.endowment {
+    border-color: rgba(255, 107, 107, 0.3);
+}
+
+.plan-card.btir {
+    border-color: rgba(81, 207, 102, 0.3);
+    background-color: rgba(81, 207, 102, 0.05);
+    /* Subtle highlight for winner usually */
+}
+
+.plan-metric {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.faded {
+    opacity: 0.7;
+    font-weight: 400;
+}
+
+/* Charts */
+.charts-container {
+    display: grid;
+    gap: 2rem;
+}
+
+.chart-card {
+    background-color: var(--surface-color);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
+    min-height: 400px;
+}
+
+/* Mobile Tweaks */
+@media (max-width: 600px) {
+    .app-container {
+        padding: 1rem;
+    }
+
+    .hero-section h2 {
+        font-size: 1.8rem;
+    }
+
+    .stat-row {
+        grid-template-columns: 1fr;
+    }
+
+    .comparison-section {
+        grid-template-columns: 1fr;
+    }
+
+    .large-stat {
+        font-size: 2.2rem;
+    }
+}
+
+/* Error Banner */
+.error-banner {
+    background-color: #fee2e2;
+    color: #991b1b;
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+/* --- NEW STYLES --- */
+
+/* Tabs */
+.tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.tab-btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+}
+
+/* Simple Table */
+.simple-table {
     width: 100%;
-    height: auto;
-    min-height: 300px;
-  }
+    border-collapse: collapse;
+    margin-top: 1rem;
 }
 
-.theme-switch {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
+.simple-table th,
+.simple-table td {
+    padding: 0.8rem;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
 }
 
-.btn {
-  padding: 8px 16px;
-  border-radius: 20px;
-  transition: all 0.3s ease;
+.simple-table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.simple-table .negative {
+    color: var(--accent);
+}
+
+.footnote {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+/* Goal Planner */
+.goal-stats {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-top: 2rem;
+}
+
+.goal-stats .stat {
+    text-align: center;
+}
+
+.divider {
+    font-weight: 700;
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+
+/* Header Actions */
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-secondary {
+    padding: 0.8rem 1.5rem;
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.btn-secondary:hover {
+    background-color: var(--border-color);
+}
+
+.btn-secondary.small {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background-color: white;
+        color: black;
+    }
+
+    .app-container {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+
+    .no-print,
+    header,
+    .btn-secondary,
+    .theme-toggle {
+        display: none !important;
+    }
+
+    .card,
+    .stat-box {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        break-inside: avoid;
+    }
+
+    .large-stat {
+        font-size: 2rem;
+    }
+
+    .chart-card {
+        page-break-inside: avoid;
+        min-height: 250px;
+    }
 }

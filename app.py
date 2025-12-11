@@ -1,149 +1,114 @@
-from flask import Flask, render_template, request, send_file
-import numpy_financial as npf
+from flask import Flask, render_template, request
 import plotly.graph_objects as go
 import pandas as pd
-from datetime import datetime
-import io
+from calculator import InsuranceCalculator
 
 app = Flask(__name__)
-
-class InsuranceCalculator:
-    def __init__(self, fd_rate=6.5, debt_fund_rate=7.5, inflation_rate=5.0):
-        self.fd_rate = fd_rate
-        self.debt_fund_rate = debt_fund_rate
-        self.inflation_rate = inflation_rate
-        self.term_insurance_rate = 4.0  # per lakh per year
-    
-    def calculate_investment_returns(self, premium, premium_term, total_term, rate):
-        """Calculate returns with limited premium payment term"""
-        total_investment = premium * premium_term
-        return round(total_investment * (1 + rate/100) ** total_term, 2)
-    
-    def calculate_fixed_deposit_returns(self, premium, premium_term, total_term, rate):
-        rate = rate/100
-        """Calculate returns with limited premium payment term"""
-        total_investment = (premium/rate)*(1-(1+rate)**(-premium_term))
-        total_investment = total_investment*(1+(rate))**(total_term-premium_term)
-        return round(total_investment, 2)
-    
-    def calculate_endowment_irr(self, premium, premium_term, total_term, maturity_amount):
-        """Calculate IRR with limited premium payment"""
-        cashflows = [-premium] * premium_term
-        cashflows.extend([0] * (total_term - premium_term))
-        cashflows.append(maturity_amount)
-        return round(npf.irr(cashflows) * 100, 2)
-    
-    def calculate_opportunity_cost(self, premium, premium_term, total_term, maturity_amount):
-        """Calculate opportunity cost compared to better investments"""
-        debt_fund_returns = self.calculate_fixed_deposit_returns( premium, premium_term, total_term, self.debt_fund_rate)
-        opportunity_loss = debt_fund_returns
-        return round(opportunity_loss, 2)
-    
-    def calculate_real_value(self, future_amount, term):
-        """Calculate inflation-adjusted present value"""
-        return round(future_amount / ((1 + self.inflation_rate/100) ** term), 2)
-    
-    def calculate_term_insurance_cost(self, sum_assured, term):
-        """Calculate pure term insurance cost"""
-        return round((sum_assured/100000) * self.term_insurance_rate * term, 2)
-    
-    def get_detailed_comparison(self, premium, premium_term, total_term, maturity):
-        """Generate detailed comparison between different investment options"""
-        term_insurance_cost = self.calculate_term_insurance_cost(maturity, total_term)
-        investment_premium = premium - term_insurance_cost/premium_term
-        
-        data = {
-            'Investment Type': ['Endowment Plan', 'Term + Debt Fund', 'Term + FD'],
-            'Premium Payment Years': [premium_term] * 3,
-            'Total Policy Term': [total_term] * 3,
-            'Total_Premium_Paid': [premium * premium_term] * 3,
-            'Insurance_Coverage': [maturity] * 3,
-            'Final Amount': [
-                maturity,
-                self.calculate_fixed_deposit_returns(investment_premium, premium_term, total_term, self.debt_fund_rate)+maturity,
-                self.calculate_fixed_deposit_returns(investment_premium, premium_term, total_term, self.fd_rate)+maturity
-            ],
-            'Real Value': [
-                self.calculate_real_value(maturity, total_term),
-                self.calculate_real_value(self.calculate_fixed_deposit_returns(investment_premium, premium_term, total_term, self.debt_fund_rate)+maturity, total_term),
-                self.calculate_real_value(self.calculate_fixed_deposit_returns(investment_premium, premium_term, total_term, self.fd_rate)+maturity, total_term)
-            ],
-        }
-        return pd.DataFrame(data)
-
-    def get_year_wise_comparison(self, premium, premium_term, total_term, maturity):
-        """Generate year-by-year comparison data"""
-        years = list(range(1, total_term + 1))
-        endowment_values = [0] * (total_term - 1) + [maturity]
-        
-        debt_values = []
-        for year in years:
-            if year <= premium_term:
-                debt_values.append(self.calculate_fixed_deposit_returns(
-                    premium, year, year, self.debt_fund_rate)+maturity)
-            else:
-                debt_values.append(self.calculate_fixed_deposit_returns(
-                    premium, premium_term, year, self.debt_fund_rate)+maturity)
-        
-        return pd.DataFrame({
-            'Year': years,
-            'Endowment Value': endowment_values,
-            'Better Investment': debt_values,
-            'Difference': [d - e for d, e in zip(debt_values, endowment_values)]
-        })
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         try:
-            premium = float(request.form['premium'])
-            premium_term = int(request.form['premium_term'])
-            total_term = int(request.form['total_term'])
-            maturity = float(request.form['maturity'])
-            inflation_rate = float(request.form['inflation_rate'])
-            fd_rate = float(request.form['fd_rate'])
-            debt_fund_rate = float(request.form['debt_rate'])
+            form_type = request.form.get('form_type', 'comparison')
             
+            # Common Inputs for both modes might exist, but strict separation is safer
+            age = int(request.form.get('age', 30))
+            gender = request.form.get('gender', 'male')
+            inflation_rate = float(request.form.get('inflation_rate', 6.0))
+            tax_bracket = float(request.form.get('tax_bracket', 30.0))
+            capital_gains_tax = float(request.form.get('capital_gains_tax', 12.5))
             
-            if premium_term > total_term:
-                return render_template('index.html', 
-                    error="Premium payment term cannot exceed total policy term")
-            
-            calc = InsuranceCalculator(fd_rate=fd_rate, debt_fund_rate=debt_fund_rate, inflation_rate=inflation_rate)
-            irr = calc.calculate_endowment_irr(premium, premium_term, total_term, maturity)
-            detailed_comparison = calc.get_detailed_comparison(premium, premium_term, total_term, maturity)
-            yearly_comparison = calc.get_year_wise_comparison(premium, premium_term, total_term, maturity)
-            opportunity_cost = calc.calculate_opportunity_cost(premium, premium_term, total_term, maturity)
-            
-            # Create visualizations
-            fig1 = go.Figure(data=[
-                go.Bar(name='Final Amount', x=detailed_comparison['Investment Type'], 
-                      y=detailed_comparison['Final Amount']),
-                go.Bar(name='Real Value', x=detailed_comparison['Investment Type'], 
-                      y=detailed_comparison['Real Value'])
-            ])
-            
-            fig2 = go.Figure()
-            fig2.add_trace(go.Scatter(x=yearly_comparison['Year'], 
-                                    y=yearly_comparison['Endowment Value'],
-                                    name='Endowment Plan'))
-            fig2.add_trace(go.Scatter(x=yearly_comparison['Year'], 
-                                    y=yearly_comparison['Better Investment'],
-                                    name='Better Investment'))
-            
-            return render_template('result.html',
-                                 irr=irr,
-                                 opportunity_cost=opportunity_cost,
-                                 detailed_comparison=detailed_comparison.to_dict('records'),
-                                 yearly_comparison=yearly_comparison.to_dict('records'),
-                                 chart1_json=fig1.to_json(),
-                                 chart2_json=fig2.to_json())
-        
-        except ValueError as e:
-            return render_template('index.html', 
-                error="Please enter valid numeric values")
-    
+            calc = InsuranceCalculator(age, gender, inflation_rate, tax_bracket, capital_gains_tax)
+
+            if form_type == 'goal_planning':
+                target_amount = float(request.form['target_amount'])
+                years = int(request.form['goal_years'])
+                return_rate = float(request.form['goal_return_rate'])
+                
+                annual_sip = calc.calculate_goal_requirements(target_amount, years, return_rate)
+                monthly_sip = annual_sip / 12
+                
+                # Comparison: How much endowment premium needed? (Assuming 5% return approx)
+                endowment_premium_needed = calc.calculate_goal_requirements(target_amount, years, 5.0)
+                
+                return render_template('result_goal.html', 
+                                       target=target_amount, 
+                                       years=years,
+                                       annual_sip=annual_sip,
+                                       monthly_sip=monthly_sip,
+                                       endowment_premium=endowment_premium_needed)
+
+            else: # Comparison Mode
+                premium = float(request.form['premium'])
+                premium_term = int(request.form['premium_term'])
+                total_term = int(request.form['total_term'])
+                maturity = float(request.form['maturity'])
+                investment_return_rate = float(request.form['return_rate'])
+
+                if premium_term > total_term:
+                    return render_template('index.html', error="Premium term cannot exceed policy term.")
+
+                # Calculations
+                # Note: sum_assured usually ~10x premium or passed explicitly. We'll assume 10x for rule of thumb or same as maturity for endowment (often SA ~= Maturity or close).
+                # Actually, let's assume Sum Assured = Maturity or Premium * 10, whichever higher.
+                sum_assured = max(maturity, premium * 10) 
+                
+                results = calc.get_comparison(premium, premium_term, total_term, sum_assured, maturity, investment_return_rate)
+                endowment_irr = calc.calculate_irr(premium, premium_term, total_term, maturity)
+                
+                # Liquidity Schedule
+                liquidity = calc.calculate_liquidity_schedule(premium, premium_term, total_term, investment_return_rate, results['investable_surplus'])
+
+                # Comparison Data
+                real_value_endowment = calc.calculate_real_value(results['endowment_post_tax'], total_term)
+                real_value_btir = calc.calculate_real_value(results['btir_post_tax'], total_term)
+                
+                opportunity_cost = results['btir_post_tax'] - results['endowment_post_tax']
+                
+                # Charts
+                # 1. Bar Chart: Post-Tax vs Investment
+                fig_bar = go.Figure(data=[
+                    go.Bar(name='Endowment (Post-Tax)', x=['Final Value'], 
+                           y=[results['endowment_post_tax']], marker_color='#ff6b6b'),
+                    go.Bar(name='Buy Term + Invest (Post-Tax)', x=['Final Value'], 
+                           y=[results['btir_post_tax']], marker_color='#51cf66')
+                ])
+                fig_bar.update_layout(barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                                      font=dict(color='#7d7d7d'), margin=dict(t=30, b=0, l=0, r=0))
+
+                # 2. Liquidity Curve (Area Chart)
+                fig_area = go.Figure()
+                fig_area.add_trace(go.Scatter(x=liquidity['years'], y=liquidity['surrender_values'], stackgroup='one', name='Endowment Liquidity', line=dict(color='#ff6b6b')))
+                fig_area.add_trace(go.Scatter(x=liquidity['years'], y=liquidity['mf_values'], stackgroup='two', name='Mutual Fund Liquidity', line=dict(color='#51cf66')))
+                fig_area.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
+                                       font=dict(color='#7d7d7d'), margin=dict(t=30, b=0, l=0, r=0),
+                                       title="Liquidity Access (Cash Available)")
+
+                return render_template('result.html',
+                                       irr=endowment_irr,
+                                       term_cost=results['term_cost'],
+                                       investable_surplus=results['investable_surplus'],
+                                       maturity=maturity,
+                                       btir_value=results['btir_final_value'],
+                                       btir_post_tax=results['btir_post_tax'],
+                                       endowment_post_tax=results['endowment_post_tax'],
+                                       tax_paid_endowment=results['endowment_tax_paid'],
+                                       tax_paid_btir=results['btir_tax_paid'],
+                                       is_taxable=results['is_taxable_endowment'],
+                                       opportunity_cost=opportunity_cost,
+                                       real_endowment=real_value_endowment,
+                                       real_btir=real_value_btir,
+                                       capital_gains_tax=capital_gains_tax,
+                                       tax_bracket=tax_bracket,
+                                       chart_bar=fig_bar.to_json(),
+                                       chart_area=fig_area.to_json())
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return render_template('index.html', error=f"Error: {str(e)}")
+
     return render_template('index.html')
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

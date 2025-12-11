@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goal Plan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="no-print">
+            <div class="logo">
+                <span class="icon">🎯</span>
+                <h1>Goal Planner</h1>
+            </div>
+            <a href="/" class="btn-secondary small">Back</a>
+        </header>
+
+        <main class="results-grid single-column">
+
+            <section class="card highlight-card">
+                <div class="card-header">
+                    <h3>To reach ₹{{ "{:,.0f}".format(target) }} in {{ years }} years</h3>
+                </div>
+                <div class="card-body">
+                    <div class="goal-stats">
+                        <div class="stat">
+                            <label>Required Monthly SIP</label>
+                            <div class="large-stat crypto-success">₹{{ "{:,.0f}".format(monthly_sip) }}</div>
+                        </div>
+                        <div class="divider">VS</div>
+                        <div class="stat">
+                            <label>Required Insurance Premium</label>
+                            <div class="large-stat crypto-text">₹{{ "{:,.0f}".format(endowment_premium/12) }}</div>
+                            <small>(Approx. 3-4x more expensive!)</small>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h3>Why the difference?</h3>
+                <p>Insurance products typically yield 4-5% returns, while a diversified equity portfolio can yield
+                    10-12% over the long term. This massive difference in compounding means you need to save
+                    significantly more in insurance to reach the same goal.</p>
+            </section>
+
+        </main>
+    </div>
+    <script>
+        const saved = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', saved);
+    </script>
+</body>
+
+</html>
