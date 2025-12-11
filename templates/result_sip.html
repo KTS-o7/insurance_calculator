@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIP Analysis Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="no-print">
+            <div class="logo">
+                <span class="icon">📊</span>
+                <h1>SIP Analysis Report</h1>
+            </div>
+            <div class="header-actions">
+                <button onclick="window.print()" class="btn-secondary small">🖨️ Print Report</button>
+                <a href="/" class="btn-secondary small">New Analysis</a>
+            </div>
+        </header>
+
+        <main class="results-grid">
+            <!-- Key Metrics: Alpha & Returns -->
+            <section class="card highlight-card">
+                <div class="card-header">
+                    <h3>Portfolio Performance</h3>
+                    {% if results.alpha > 0 %}
+                    <span class="badge success">Alpha +{{ results.alpha }}%</span>
+                    {% elif results.alpha < 0 %} <span class="badge warning">Alpha {{ results.alpha }}%</span>
+                        {% else %}
+                        <span class="badge neutral">Alpha 0%</span>
+                        {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <label>Total Invested</label>
+                            <div class="value">₹{{ "{:,.0f}".format(results.total_invested) }}</div>
+                        </div>
+                        <div class="metric highlight">
+                            <label>Final Value</label>
+                            <div
+                                class="value large {% if results.return_pct > 0 %}crypto-success{% else %}crypto-text{% endif %}">
+                                ₹{{ "{:,.0f}".format(results.final_value) }}
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <label>Absolute Return</label>
+                            <div
+                                class="value {% if results.absolute_return > 0 %}crypto-success{% else %}crypto-text{% endif %}">
+                                {% if results.absolute_return > 0 %}+{% endif %}₹{{
+                                "{:,.0f}".format(results.absolute_return) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Stats Row -->
+            <section class="stat-row four-cols">
+                <div class="stat-box">
+                    <label>Return %</label>
+                    <div class="value {% if results.return_pct > 0 %}crypto-success{% else %}crypto-text{% endif %}">
+                        {{ "{:.1f}".format(results.return_pct) }}%
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <label>CAGR (XIRR)</label>
+                    <div class="value">{{ "{:.1f}".format(results.xirr) }}%</div>
+                </div>
+                <div class="stat-box">
+                    <label>Benchmark Return</label>
+                    <div class="value">{{ "{:.1f}".format(results.benchmark_return) }}%</div>
+                </div>
+                <div class="stat-box">
+                    <label>Investment Period</label>
+                    <div class="value">{{ results.years }} Years</div>
+                </div>
+            </section>
+
+            <!-- Alpha Explanation Card -->
+            <section class="card alpha-card">
+                <h3>What is Alpha?</h3>
+                <p>
+                    <strong>Alpha</strong> measures how much your portfolio outperformed (or underperformed) compared to
+                    the Nifty 50 benchmark index.
+                    {% if results.alpha > 0 %}
+                    <span class="crypto-success">Your portfolio generated {{ "{:.1f}".format(results.alpha) }}% excess
+                        returns!</span>
+                    {% elif results.alpha < 0 %} <span class="crypto-text">Your portfolio underperformed by {{
+                        "{:.1f}".format(results.alpha|abs) }}% compared to Nifty 50.</span>
+                        {% else %}
+                        Your portfolio matched the benchmark performance.
+                        {% endif %}
+                </p>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="charts-container">
+                <!-- Returns Comparison Chart -->
+                {% if charts.returns %}
+                <div class="chart-card">
+                    <h3>Portfolio vs Benchmark</h3>
+                    <p class="chart-desc">How did your allocation perform against Nifty 50?</p>
+                    <div id="chart-returns"></div>
+                </div>
+                {% endif %}
+
+                <!-- Allocation Donut Chart -->
+                {% if charts.allocation %}
+                <div class="chart-card">
+                    <h3>Your Asset Allocation</h3>
+                    <p class="chart-desc">Distribution of your monthly SIP across asset classes</p>
+                    <div id="chart-allocation"></div>
+                </div>
+                {% endif %}
+
+                <!-- Asset-wise Performance -->
+                {% if charts.breakdown %}
+                <div class="chart-card full-width">
+                    <h3>Asset Class Performance</h3>
+                    <p class="chart-desc">Returns by individual asset class</p>
+                    <div id="chart-breakdown"></div>
+                </div>
+                {% endif %}
+            </section>
+
+            <!-- Allocation Breakdown Table -->
+            {% if results.allocation_results %}
+            <section class="card">
+                <h3>Allocation Details</h3>
+                <table class="simple-table">
+                    <thead>
+                        <tr>
+                            <th>Asset Class</th>
+                            <th>Allocation</th>
+                            <th>Monthly SIP</th>
+                            <th>Total Invested</th>
+                            <th>Final Value</th>
+                            <th>Return</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key, asset in results.allocation_results.items() %}
+                        <tr>
+                            <td>
+                                <span class="color-dot" style="background: {{ asset.color }};"></span>
+                                {{ asset.label }}
+                            </td>
+                            <td>{{ asset.percentage }}%</td>
+                            <td>₹{{ "{:,.0f}".format(asset.monthly_sip) }}</td>
+                            <td>₹{{ "{:,.0f}".format(asset.invested) }}</td>
+                            <td>₹{{ "{:,.0f}".format(asset.final_value) }}</td>
+                            <td class="{% if asset.return_pct > 0 %}crypto-success{% else %}crypto-text{% endif %}">
+                                {{ "{:.1f}".format(asset.return_pct) }}%
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td><strong>Total</strong></td>
+                            <td><strong>100%</strong></td>
+                            <td><strong>₹{{ "{:,.0f}".format(results.monthly_sip) }}</strong></td>
+                            <td><strong>₹{{ "{:,.0f}".format(results.total_invested) }}</strong></td>
+                            <td><strong>₹{{ "{:,.0f}".format(results.final_value) }}</strong></td>
+                            <td class="{% if results.return_pct > 0 %}crypto-success{% else %}crypto-text{% endif %}">
+                                <strong>{{ "{:.1f}".format(results.return_pct) }}%</strong>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </section>
+            {% endif %}
+
+            <!-- Disclaimer -->
+            <section class="card disclaimer">
+                <h4>📢 Important Disclaimer</h4>
+                <p>
+                    This analysis is based on historical data and is for educational purposes only.
+                    Past performance is not indicative of future results. The actual returns may vary
+                    based on market conditions, timing of investments, and other factors.
+                    Please consult a financial advisor before making investment decisions.
+                </p>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Render Charts
+        {% if charts.returns %}
+        const returnsData = {{ charts.returns | safe }};
+        Plotly.newPlot('chart-returns', returnsData.data, returnsData.layout, { responsive: true, displayModeBar: false });
+        {% endif %}
+
+        {% if charts.allocation %}
+        const allocationData = {{ charts.allocation | safe }};
+        Plotly.newPlot('chart-allocation', allocationData.data, allocationData.layout, { responsive: true, displayModeBar: false });
+        {% endif %}
+
+        {% if charts.breakdown %}
+        const breakdownData = {{ charts.breakdown | safe }};
+        Plotly.newPlot('chart-breakdown', breakdownData.data, breakdownData.layout, { responsive: true, displayModeBar: false });
+        {% endif %}
+
+        // Apply saved theme
+        const saved = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', saved);
+    </script>
+</body>
+
+</html>

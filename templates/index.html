@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Insurance Calculator</title>
+  <title>Smart Wealth - Insurance & SIP Calculator</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -50,12 +50,15 @@
 
       <!-- TABS -->
       <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('comparison')">Policy Comparison</button>
+        <button class="tab-btn {% if not sip_tab %}active{% endif %}" onclick="switchTab('comparison')">Policy
+          Comparison</button>
         <button class="tab-btn" onclick="switchTab('goal')">Goal Planner</button>
+        <button class="tab-btn {% if sip_tab %}active{% endif %}" onclick="switchTab('sip')">SIP Analyzer</button>
       </div>
 
       <!-- COMPARISON FORM -->
-      <form method="POST" class="calculator-form" id="comparison-form">
+      <form method="POST" class="calculator-form" id="comparison-form" {% if sip_tab %}style="display: none;" {% endif
+        %}>
         <input type="hidden" name="form_type" value="comparison">
 
         <div class="form-grid">
@@ -148,10 +151,255 @@
           <button type="submit" class="btn-primary">Plan My Goal</button>
         </div>
       </form>
+
+      <!-- SIP ANALYZER FORM -->
+      <form method="POST" action="/sip" class="calculator-form" id="sip-form" style="display: none;">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="monthly_sip">Monthly SIP Amount (₹)</label>
+            <input type="number" name="monthly_sip" required min="500" value="10000" placeholder="e.g., 10000">
+          </div>
+
+          <div class="form-group">
+            <label for="years">Investment Period (Years)</label>
+            <select name="years" required>
+              <option value="3">3 Years</option>
+              <option value="5" selected>5 Years</option>
+              <option value="7">7 Years</option>
+              <option value="10">10 Years</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Allocation Mode Toggle -->
+        <div class="allocation-section">
+          <h3>Asset Allocation</h3>
+          <div class="allocation-mode-toggle">
+            <button type="button" class="mode-btn active" onclick="setAllocationMode('preset')">Use Preset</button>
+            <button type="button" class="mode-btn" onclick="setAllocationMode('custom')">Custom Allocation</button>
+            <button type="button" class="mode-btn" onclick="setAllocationMode('funds')">Select Funds</button>
+          </div>
+          <input type="hidden" name="allocation_mode" id="allocation_mode" value="preset">
+
+          <!-- Preset Cards -->
+          <div class="preset-grid" id="preset-section">
+            {% if presets %}
+            {% for key, preset in presets.items() %}
+            <div class="preset-card {% if key == 'balanced' %}selected{% endif %}" data-preset="{{ key }}"
+              onclick="selectPreset('{{ key }}')">
+              <h4>{{ preset.label }}</h4>
+              <p class="preset-desc">{{ preset.description }}</p>
+              <div class="allocation-preview">
+                {% for asset, pct in preset.allocation.items() %}
+                <div class="preview-bar"
+                  style="width: {{ pct }}%; background: {{ asset_classes[asset].color if asset_classes and asset in asset_classes else '#4a90e2' }};"
+                  title="{{ asset }}: {{ pct }}%"></div>
+                {% endfor %}
+              </div>
+              <div class="preset-breakdown">
+                {% for asset, pct in preset.allocation.items() %}
+                <span>{{ asset_classes[asset].label if asset_classes and asset in asset_classes else asset }}: {{ pct
+                  }}%</span>
+                {% endfor %}
+              </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <!-- Default presets if not passed -->
+            <div class="preset-card" data-preset="conservative" onclick="selectPreset('conservative')">
+              <h4>Conservative</h4>
+              <p class="preset-desc">Low risk, stable returns</p>
+            </div>
+            <div class="preset-card selected" data-preset="balanced" onclick="selectPreset('balanced')">
+              <h4>Balanced</h4>
+              <p class="preset-desc">Moderate risk and growth</p>
+            </div>
+            <div class="preset-card" data-preset="growth" onclick="selectPreset('growth')">
+              <h4>Growth</h4>
+              <p class="preset-desc">Higher risk, higher returns</p>
+            </div>
+            <div class="preset-card" data-preset="aggressive" onclick="selectPreset('aggressive')">
+              <h4>Aggressive</h4>
+              <p class="preset-desc">Maximum growth potential</p>
+            </div>
+            {% endif %}
+          </div>
+          <input type="hidden" name="preset" id="selected_preset" value="balanced">
+
+          <!-- Custom Allocation Sliders -->
+          <div class="custom-allocation" id="custom-section" style="display: none;">
+            <div class="allocation-sliders">
+              <div class="allocation-slider-group">
+                <label>Large Cap Equity</label>
+                <input type="range" class="allocation-slider" name="alloc_large_cap_equity" id="alloc_large_cap_equity"
+                  min="0" max="100" value="50" oninput="updateAllocation()">
+                <span class="slider-value" id="val_large_cap_equity">50%</span>
+              </div>
+              <div class="allocation-slider-group">
+                <label>Mid Cap Equity</label>
+                <input type="range" class="allocation-slider" name="alloc_mid_cap_equity" id="alloc_mid_cap_equity"
+                  min="0" max="100" value="20" oninput="updateAllocation()">
+                <span class="slider-value" id="val_mid_cap_equity">20%</span>
+              </div>
+              <div class="allocation-slider-group">
+                <label>Small Cap Equity</label>
+                <input type="range" class="allocation-slider" name="alloc_small_cap_equity" id="alloc_small_cap_equity"
+                  min="0" max="100" value="0" oninput="updateAllocation()">
+                <span class="slider-value" id="val_small_cap_equity">0%</span>
+              </div>
+              <div class="allocation-slider-group">
+                <label>Debt/Bonds</label>
+                <input type="range" class="allocation-slider" name="alloc_debt" id="alloc_debt" min="0" max="100"
+                  value="20" oninput="updateAllocation()">
+                <span class="slider-value" id="val_debt">20%</span>
+              </div>
+              <div class="allocation-slider-group">
+                <label>Gold</label>
+                <input type="range" class="allocation-slider" name="alloc_gold" id="alloc_gold" min="0" max="100"
+                  value="10" oninput="updateAllocation()">
+                <span class="slider-value" id="val_gold">10%</span>
+              </div>
+              <div class="allocation-slider-group">
+                <label>International</label>
+                <input type="range" class="allocation-slider" name="alloc_international" id="alloc_international"
+                  min="0" max="100" value="0" oninput="updateAllocation()">
+                <span class="slider-value" id="val_international">0%</span>
+              </div>
+            </div>
+            <div class="allocation-total-bar">
+              <div class="total-label">Total Allocation:</div>
+              <div class="total-value" id="total_allocation">100%</div>
+              <div class="total-status" id="total_status">✓</div>
+            </div>
+          </div>
+
+          <!-- Fund Selection Section -->
+          <div class="funds-allocation" id="funds-section" style="display: none;">
+            <p class="funds-intro">Search and select specific mutual funds for each asset class. Max 3 funds per
+              category.</p>
+            <input type="hidden" name="funds_config" id="funds_config" value="{}">
+
+            <!-- Large Cap -->
+            <div class="fund-category" data-category="large_cap_equity">
+              <div class="fund-category-header">
+                <span class="category-color" style="background: #4a90e2;"></span>
+                <h4>Large Cap Equity</h4>
+                <button type="button" class="add-fund-btn" onclick="showFundSearch('large_cap_equity')">+ Add
+                  Fund</button>
+              </div>
+              <div class="fund-chips" id="chips_large_cap_equity"></div>
+              <div class="fund-search-container" id="search_large_cap_equity" style="display: none;">
+                <input type="text" class="fund-search-input" placeholder="Search funds... (e.g., HDFC, ICICI)"
+                  oninput="debounceSearch(this.value, 'large_cap_equity')">
+                <div class="fund-search-dropdown" id="dropdown_large_cap_equity"></div>
+              </div>
+            </div>
+
+            <!-- Mid Cap -->
+            <div class="fund-category" data-category="mid_cap_equity">
+              <div class="fund-category-header">
+                <span class="category-color" style="background: #7c3aed;"></span>
+                <h4>Mid Cap Equity</h4>
+                <button type="button" class="add-fund-btn" onclick="showFundSearch('mid_cap_equity')">+ Add
+                  Fund</button>
+              </div>
+              <div class="fund-chips" id="chips_mid_cap_equity"></div>
+              <div class="fund-search-container" id="search_mid_cap_equity" style="display: none;">
+                <input type="text" class="fund-search-input" placeholder="Search funds..."
+                  oninput="debounceSearch(this.value, 'mid_cap_equity')">
+                <div class="fund-search-dropdown" id="dropdown_mid_cap_equity"></div>
+              </div>
+            </div>
+
+            <!-- Small Cap -->
+            <div class="fund-category" data-category="small_cap_equity">
+              <div class="fund-category-header">
+                <span class="category-color" style="background: #ec4899;"></span>
+                <h4>Small Cap Equity</h4>
+                <button type="button" class="add-fund-btn" onclick="showFundSearch('small_cap_equity')">+ Add
+                  Fund</button>
+              </div>
+              <div class="fund-chips" id="chips_small_cap_equity"></div>
+              <div class="fund-search-container" id="search_small_cap_equity" style="display: none;">
+                <input type="text" class="fund-search-input" placeholder="Search funds..."
+                  oninput="debounceSearch(this.value, 'small_cap_equity')">
+                <div class="fund-search-dropdown" id="dropdown_small_cap_equity"></div>
+              </div>
+            </div>
+
+            <!-- Debt -->
+            <div class="fund-category" data-category="debt">
+              <div class="fund-category-header">
+                <span class="category-color" style="background: #10b981;"></span>
+                <h4>Debt/Bonds</h4>
+                <button type="button" class="add-fund-btn" onclick="showFundSearch('debt')">+ Add Fund</button>
+              </div>
+              <div class="fund-chips" id="chips_debt"></div>
+              <div class="fund-search-container" id="search_debt" style="display: none;">
+                <input type="text" class="fund-search-input" placeholder="Search funds..."
+                  oninput="debounceSearch(this.value, 'debt')">
+                <div class="fund-search-dropdown" id="dropdown_debt"></div>
+              </div>
+            </div>
+
+            <!-- Gold -->
+            <div class="fund-category" data-category="gold">
+              <div class="fund-category-header">
+                <span class="category-color" style="background: #f59e0b;"></span>
+                <h4>Gold</h4>
+                <button type="button" class="add-fund-btn" onclick="showFundSearch('gold')">+ Add Fund</button>
+              </div>
+              <div class="fund-chips" id="chips_gold"></div>
+              <div class="fund-search-container" id="search_gold" style="display: none;">
+                <input type="text" class="fund-search-input" placeholder="Search funds..."
+                  oninput="debounceSearch(this.value, 'gold')">
+                <div class="fund-search-dropdown" id="dropdown_gold"></div>
+              </div>
+            </div>
+
+            <!-- International -->
+            <div class="fund-category" data-category="international">
+              <div class="fund-category-header">
+                <span class="category-color" style="background: #06b6d4;"></span>
+                <h4>International Equity</h4>
+                <button type="button" class="add-fund-btn" onclick="showFundSearch('international')">+ Add Fund</button>
+              </div>
+              <div class="fund-chips" id="chips_international"></div>
+              <div class="fund-search-container" id="search_international" style="display: none;">
+                <input type="text" class="fund-search-input" placeholder="Search funds..."
+                  oninput="debounceSearch(this.value, 'international')">
+                <div class="fund-search-dropdown" id="dropdown_international"></div>
+              </div>
+            </div>
+
+            <!-- Fund Allocation Total -->
+            <div class="allocation-total-bar">
+              <div class="total-label">Total Fund Allocation:</div>
+              <div class="total-value" id="fund_total_allocation">0%</div>
+              <div class="total-status" id="fund_total_status">+100% needed</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" id="sip-submit-btn">Analyze SIP Performance</button>
+        </div>
+      </form>
     </main>
   </div>
 
   <script>
+    // Fund selection state
+    const selectedFunds = {
+      large_cap_equity: [],
+      mid_cap_equity: [],
+      small_cap_equity: [],
+      debt: [],
+      gold: [],
+      international: []
+    };
+    let searchTimeout = null;
+
     function toggleTheme() {
       const html = document.documentElement;
       const current = html.getAttribute('data-theme');
@@ -162,19 +410,290 @@
 
     function switchTab(tab) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('comparison-form').style.display = 'none';
+      document.getElementById('goal-form').style.display = 'none';
+      document.getElementById('sip-form').style.display = 'none';
+
       if (tab === 'comparison') {
         document.getElementById('comparison-form').style.display = 'block';
-        document.getElementById('goal-form').style.display = 'none';
         document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
-      } else {
-        document.getElementById('comparison-form').style.display = 'none';
+      } else if (tab === 'goal') {
         document.getElementById('goal-form').style.display = 'block';
         document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+      } else if (tab === 'sip') {
+        document.getElementById('sip-form').style.display = 'block';
+        document.querySelector('.tab-btn:nth-child(3)').classList.add('active');
       }
     }
 
+    function setAllocationMode(mode) {
+      document.getElementById('allocation_mode').value = mode;
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+
+      // Hide all sections first
+      document.getElementById('preset-section').style.display = 'none';
+      document.getElementById('custom-section').style.display = 'none';
+      document.getElementById('funds-section').style.display = 'none';
+
+      if (mode === 'preset') {
+        document.getElementById('preset-section').style.display = 'grid';
+        document.querySelector('.mode-btn:nth-child(1)').classList.add('active');
+        document.getElementById('sip-submit-btn').disabled = false;
+      } else if (mode === 'custom') {
+        document.getElementById('custom-section').style.display = 'block';
+        document.querySelector('.mode-btn:nth-child(2)').classList.add('active');
+        updateAllocation();
+      } else if (mode === 'funds') {
+        document.getElementById('funds-section').style.display = 'block';
+        document.querySelector('.mode-btn:nth-child(3)').classList.add('active');
+        updateFundAllocation();
+      }
+    }
+
+    function selectPreset(preset) {
+      document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('selected'));
+      document.querySelector(`.preset-card[data-preset="${preset}"]`).classList.add('selected');
+      document.getElementById('selected_preset').value = preset;
+    }
+
+    function updateAllocation() {
+      const assets = ['large_cap_equity', 'mid_cap_equity', 'small_cap_equity', 'debt', 'gold', 'international'];
+      let total = 0;
+
+      assets.forEach(asset => {
+        const slider = document.getElementById(`alloc_${asset}`);
+        const valueSpan = document.getElementById(`val_${asset}`);
+        if (slider && valueSpan) {
+          const val = parseInt(slider.value);
+          valueSpan.textContent = val + '%';
+          total += val;
+        }
+      });
+
+      const totalEl = document.getElementById('total_allocation');
+      const statusEl = document.getElementById('total_status');
+      const submitBtn = document.getElementById('sip-submit-btn');
+
+      totalEl.textContent = total + '%';
+
+      if (total === 100) {
+        totalEl.classList.remove('invalid');
+        totalEl.classList.add('valid');
+        statusEl.textContent = '✓';
+        statusEl.classList.remove('invalid');
+        statusEl.classList.add('valid');
+        submitBtn.disabled = false;
+      } else {
+        totalEl.classList.remove('valid');
+        totalEl.classList.add('invalid');
+        statusEl.textContent = total < 100 ? `+${100 - total}% needed` : `-${total - 100}% excess`;
+        statusEl.classList.remove('valid');
+        statusEl.classList.add('invalid');
+        submitBtn.disabled = true;
+      }
+    }
+
+    // Fund Selection Functions
+    function showFundSearch(category) {
+      const searchContainer = document.getElementById(`search_${category}`);
+      const currentFunds = selectedFunds[category] || [];
+
+      if (currentFunds.length >= 3) {
+        alert('Maximum 3 funds per category');
+        return;
+      }
+
+      searchContainer.style.display = 'block';
+      searchContainer.querySelector('.fund-search-input').focus();
+    }
+
+    function hideFundSearch(category) {
+      const searchContainer = document.getElementById(`search_${category}`);
+      searchContainer.style.display = 'none';
+      searchContainer.querySelector('.fund-search-input').value = '';
+      document.getElementById(`dropdown_${category}`).innerHTML = '';
+    }
+
+    function debounceSearch(query, category) {
+      if (searchTimeout) clearTimeout(searchTimeout);
+
+      if (query.length < 2) {
+        document.getElementById(`dropdown_${category}`).innerHTML = '';
+        return;
+      }
+
+      searchTimeout = setTimeout(() => searchFunds(query, category), 300);
+    }
+
+    async function searchFunds(query, category) {
+      const dropdown = document.getElementById(`dropdown_${category}`);
+      dropdown.innerHTML = '<div class="search-loading">Searching...</div>';
+
+      try {
+        const response = await fetch(`/api/schemes/search?q=${encodeURIComponent(query)}`);
+        const results = await response.json();
+
+        if (results.length === 0) {
+          dropdown.innerHTML = '<div class="search-no-results">No funds found</div>';
+          return;
+        }
+
+        dropdown.innerHTML = results.slice(0, 10).map(fund => `
+          <div class="search-result-item" onclick="selectFund('${category}', '${fund.schemeCode}', '${escapeHtml(fund.schemeName)}')">
+            <div class="fund-name">${fund.schemeName}</div>
+            <div class="fund-code">Code: ${fund.schemeCode}</div>
+          </div>
+        `).join('');
+      } catch (error) {
+        dropdown.innerHTML = '<div class="search-error">Error searching funds</div>';
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML.replace(/'/g, "\\'");
+    }
+
+    function selectFund(category, schemeCode, schemeName) {
+      const currentFunds = selectedFunds[category] || [];
+
+      // Check if already selected
+      if (currentFunds.some(f => f.scheme_code === schemeCode)) {
+        hideFundSearch(category);
+        return;
+      }
+
+      // Check max limit
+      if (currentFunds.length >= 3) {
+        alert('Maximum 3 funds per category');
+        return;
+      }
+
+      // Calculate default percentage
+      const defaultPct = Math.floor(100 / (currentFunds.length + 1));
+
+      // Add fund
+      selectedFunds[category].push({
+        scheme_code: schemeCode,
+        name: schemeName,
+        percentage: defaultPct
+      });
+
+      // Redistribute percentages evenly
+      redistributePercentages(category);
+
+      // Update UI
+      renderFundChips(category);
+      hideFundSearch(category);
+      updateFundAllocation();
+    }
+
+    function removeFund(category, schemeCode) {
+      selectedFunds[category] = selectedFunds[category].filter(f => f.scheme_code !== schemeCode);
+      redistributePercentages(category);
+      renderFundChips(category);
+      updateFundAllocation();
+    }
+
+    function redistributePercentages(category) {
+      const funds = selectedFunds[category];
+      if (funds.length === 0) return;
+
+      // Equal distribution
+      const pctEach = Math.floor(100 / funds.length);
+      const remainder = 100 - (pctEach * funds.length);
+
+      funds.forEach((fund, idx) => {
+        fund.percentage = pctEach + (idx === 0 ? remainder : 0);
+      });
+    }
+
+    function updateFundPercentage(category, schemeCode, newPct) {
+      const fund = selectedFunds[category].find(f => f.scheme_code === schemeCode);
+      if (fund) {
+        fund.percentage = parseInt(newPct) || 0;
+      }
+      updateFundAllocation();
+    }
+
+    function renderFundChips(category) {
+      const chipsContainer = document.getElementById(`chips_${category}`);
+      const funds = selectedFunds[category] || [];
+
+      if (funds.length === 0) {
+        chipsContainer.innerHTML = '<span class="no-funds-hint">No funds selected</span>';
+        return;
+      }
+
+      chipsContainer.innerHTML = funds.map(fund => `
+        <div class="fund-chip">
+          <span class="fund-chip-name" title="${fund.name}">${fund.name.substring(0, 25)}${fund.name.length > 25 ? '...' : ''}</span>
+          <input type="number" class="fund-chip-pct" value="${fund.percentage}" min="0" max="100" 
+                 onchange="updateFundPercentage('${category}', '${fund.scheme_code}', this.value)">
+          <span class="fund-chip-pct-label">%</span>
+          <button type="button" class="fund-chip-remove" onclick="removeFund('${category}', '${fund.scheme_code}')">&times;</button>
+        </div>
+      `).join('');
+    }
+
+    function updateFundAllocation() {
+      let total = 0;
+
+      // Sum all percentages across all categories
+      Object.values(selectedFunds).forEach(funds => {
+        funds.forEach(fund => {
+          total += fund.percentage || 0;
+        });
+      });
+
+      const totalEl = document.getElementById('fund_total_allocation');
+      const statusEl = document.getElementById('fund_total_status');
+      const submitBtn = document.getElementById('sip-submit-btn');
+
+      totalEl.textContent = total + '%';
+
+      // Update hidden input with JSON config
+      const fundsConfig = {};
+      Object.keys(selectedFunds).forEach(category => {
+        if (selectedFunds[category].length > 0) {
+          fundsConfig[category] = selectedFunds[category];
+        }
+      });
+      document.getElementById('funds_config').value = JSON.stringify(fundsConfig);
+
+      if (total === 100) {
+        totalEl.classList.remove('invalid');
+        totalEl.classList.add('valid');
+        statusEl.textContent = '✓';
+        statusEl.classList.remove('invalid');
+        statusEl.classList.add('valid');
+        submitBtn.disabled = false;
+      } else {
+        totalEl.classList.remove('valid');
+        totalEl.classList.add('invalid');
+        statusEl.textContent = total < 100 ? `+${100 - total}% needed` : `-${total - 100}% excess`;
+        statusEl.classList.remove('valid');
+        statusEl.classList.add('invalid');
+        submitBtn.disabled = true;
+      }
+    }
+
+    // Initialize chips for all categories
+    function initFundChips() {
+      const categories = ['large_cap_equity', 'mid_cap_equity', 'small_cap_equity', 'debt', 'gold', 'international'];
+      categories.forEach(cat => renderFundChips(cat));
+    }
+
+    // Initialize
     const saved = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     document.documentElement.setAttribute('data-theme', saved);
+    initFundChips();
+
+    // Check if SIP tab should be active
+    {% if sip_tab %}
+    switchTab('sip');
+    {% endif %}
   </script>
 </body>
 

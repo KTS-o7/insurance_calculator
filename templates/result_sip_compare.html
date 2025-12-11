@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Comparison Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+    <div class="app-container compare-container">
+        <header class="no-print">
+            <div class="logo">
+                <span class="icon">⚖️</span>
+                <h1>Portfolio Comparison</h1>
+            </div>
+            <div class="header-actions">
+                <button onclick="window.print()" class="btn-secondary small">🖨️ Print</button>
+                <a href="/" class="btn-secondary small">New Analysis</a>
+            </div>
+        </header>
+
+        <main class="results-grid">
+            <!-- Winner Banner -->
+            <section class="card winner-banner">
+                <div class="winner-text">
+                    {% if results.delta.winner == 'A' %}
+                    <span class="winner-badge a">Portfolio A</span> outperformed by
+                    <strong>₹{{ "{:,.0f}".format(results.delta.final_value_diff|abs) }}</strong>
+                    {% else %}
+                    <span class="winner-badge b">Portfolio B</span> outperformed by
+                    <strong>₹{{ "{:,.0f}".format(results.delta.final_value_diff|abs) }}</strong>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Side by Side Comparison -->
+            <section class="comparison-grid">
+                <!-- Portfolio A -->
+                <div class="portfolio-card {% if results.delta.winner == 'A' %}winner{% endif %}">
+                    <h3>
+                        Portfolio A
+                        {% if results.delta.winner == 'A' %}<span class="crown">👑</span>{% endif %}
+                    </h3>
+                    <div class="portfolio-metrics">
+                        <div class="metric">
+                            <label>Final Value</label>
+                            <div class="value large crypto-success">
+                                ₹{{ "{:,.0f}".format(results.portfolio_a.final_value) }}
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <label>Total Invested</label>
+                            <div class="value">₹{{ "{:,.0f}".format(results.portfolio_a.total_invested) }}</div>
+                        </div>
+                        <div class="metric">
+                            <label>Return %</label>
+                            <div class="value {% if results.portfolio_a.return_pct > 0 %}crypto-success{% endif %}">
+                                {{ "{:.1f}".format(results.portfolio_a.return_pct) }}%
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <label>Alpha</label>
+                            <div
+                                class="value {% if results.portfolio_a.alpha > 0 %}crypto-success{% else %}crypto-text{% endif %}">
+                                {{ "{:+.1f}".format(results.portfolio_a.alpha) }}%
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <label>CAGR</label>
+                            <div class="value">{{ "{:.1f}".format(results.portfolio_a.xirr) }}%</div>
+                        </div>
+                    </div>
+                    {% if results.portfolio_a.portfolio_type == 'preset' %}
+                    <div class="portfolio-type-badge">
+                        Preset: {{ results.portfolio_a.preset_name|title }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Portfolio B -->
+                <div class="portfolio-card {% if results.delta.winner == 'B' %}winner{% endif %}">
+                    <h3>
+                        Portfolio B
+                        {% if results.delta.winner == 'B' %}<span class="crown">👑</span>{% endif %}
+                    </h3>
+                    <div class="portfolio-metrics">
+                        <div class="metric">
+                            <label>Final Value</label>
+                            <div class="value large crypto-success">
+                                ₹{{ "{:,.0f}".format(results.portfolio_b.final_value) }}
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <label>Total Invested</label>
+                            <div class="value">₹{{ "{:,.0f}".format(results.portfolio_b.total_invested) }}</div>
+                        </div>
+                        <div class="metric">
+                            <label>Return %</label>
+                            <div class="value {% if results.portfolio_b.return_pct > 0 %}crypto-success{% endif %}">
+                                {{ "{:.1f}".format(results.portfolio_b.return_pct) }}%
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <label>Alpha</label>
+                            <div
+                                class="value {% if results.portfolio_b.alpha > 0 %}crypto-success{% else %}crypto-text{% endif %}">
+                                {{ "{:+.1f}".format(results.portfolio_b.alpha) }}%
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <label>CAGR</label>
+                            <div class="value">{{ "{:.1f}".format(results.portfolio_b.xirr) }}%</div>
+                        </div>
+                    </div>
+                    {% if results.portfolio_b.portfolio_type == 'preset' %}
+                    <div class="portfolio-type-badge">
+                        Preset: {{ results.portfolio_b.preset_name|title }}
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Delta Metrics -->
+            <section class="card delta-section">
+                <h3>Difference (A - B)</h3>
+                <div class="delta-grid">
+                    <div
+                        class="delta-item {% if results.delta.final_value_diff > 0 %}positive{% else %}negative{% endif %}">
+                        <label>Value Difference</label>
+                        <div class="delta-value">
+                            {{ "{:+,.0f}".format(results.delta.final_value_diff) }}
+                        </div>
+                    </div>
+                    <div
+                        class="delta-item {% if results.delta.return_pct_diff > 0 %}positive{% else %}negative{% endif %}">
+                        <label>Return % Diff</label>
+                        <div class="delta-value">
+                            {{ "{:+.1f}".format(results.delta.return_pct_diff) }}%
+                        </div>
+                    </div>
+                    <div class="delta-item {% if results.delta.alpha_diff > 0 %}positive{% else %}negative{% endif %}">
+                        <label>Alpha Diff</label>
+                        <div class="delta-value">
+                            {{ "{:+.1f}".format(results.delta.alpha_diff) }}%
+                        </div>
+                    </div>
+                    <div class="delta-item {% if results.delta.xirr_diff > 0 %}positive{% else %}negative{% endif %}">
+                        <label>CAGR Diff</label>
+                        <div class="delta-value">
+                            {{ "{:+.1f}".format(results.delta.xirr_diff) }}%
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Comparison Chart -->
+            {% if charts.comparison %}
+            <section class="chart-card">
+                <h3>Visual Comparison</h3>
+                <div id="chart-comparison"></div>
+            </section>
+            {% endif %}
+
+            <!-- Investment Details -->
+            <section class="card">
+                <h4>Analysis Parameters</h4>
+                <div class="params-grid">
+                    <div><strong>Monthly SIP:</strong> ₹{{ "{:,.0f}".format(results.monthly_sip) }}</div>
+                    <div><strong>Period:</strong> {{ results.years }} years</div>
+                    <div><strong>Start Date:</strong> {{ results.start_date }}</div>
+                    <div><strong>End Date:</strong> {{ results.end_date }}</div>
+                </div>
+            </section>
+
+            <!-- Disclaimer -->
+            <section class="card disclaimer">
+                <h4>📢 Disclaimer</h4>
+                <p>
+                    This comparison is based on historical data. Past performance is not indicative of future results.
+                    Consult a financial advisor before investing.
+                </p>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        {% if charts.comparison %}
+        const comparisonData = {{ charts.comparison | safe }};
+        Plotly.newPlot('chart-comparison', comparisonData.data, comparisonData.layout, { responsive: true, displayModeBar: false });
+        {% endif %}
+
+        // Apply saved theme
+        const saved = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', saved);
+    </script>
+</body>
+
+</html>

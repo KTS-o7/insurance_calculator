@@ -505,3 +505,745 @@ select:focus {
         min-height: 250px;
     }
 }
+
+/* =============================================================================
+   SIP ANALYZER STYLES
+   ============================================================================= */
+
+/* Allocation Section */
+.allocation-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.allocation-section h3 {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+/* Allocation Mode Toggle */
+.allocation-mode-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    background: var(--bg-color);
+    padding: 0.25rem;
+    border-radius: var(--radius-md);
+    width: fit-content;
+}
+
+.mode-btn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: calc(var(--radius-md) - 2px);
+    transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+    color: var(--text-primary);
+}
+
+.mode-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+/* Preset Cards Grid */
+.preset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.preset-card {
+    background: var(--bg-color);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.preset-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary);
+}
+
+.preset-card.selected {
+    border-color: var(--primary);
+    background: rgba(74, 144, 226, 0.05);
+}
+
+.preset-card h4 {
+    margin: 0 0 0.3rem 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.preset-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.8rem 0;
+}
+
+/* Allocation Preview Bar */
+.allocation-preview {
+    display: flex;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.preview-bar {
+    height: 100%;
+    min-width: 2px;
+}
+
+.preset-breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.preset-breakdown span {
+    background: var(--bg-color);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+}
+
+/* Custom Allocation Sliders */
+.custom-allocation {
+    background: var(--bg-color);
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+}
+
+.allocation-sliders {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.allocation-slider-group {
+    display: grid;
+    grid-template-columns: 140px 1fr 60px;
+    align-items: center;
+    gap: 1rem;
+}
+
+.allocation-slider-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.allocation-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--border-color);
+    outline: none;
+}
+
+.allocation-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.allocation-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.slider-value {
+    text-align: right;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Total Allocation Bar */
+.allocation-total-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.total-label {
+    font-weight: 500;
+}
+
+.total-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.total-value.valid {
+    color: var(--success);
+}
+
+.total-value.invalid {
+    color: var(--accent);
+}
+
+.total-status {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.total-status.valid {
+    color: var(--success);
+}
+
+.total-status.invalid {
+    color: var(--accent);
+}
+
+/* =============================================================================
+   SIP RESULTS PAGE STYLES
+   ============================================================================= */
+
+/* Metrics Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    text-align: center;
+}
+
+.metric label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+}
+
+.metric .value {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.metric .value.large {
+    font-size: 2rem;
+}
+
+.metric.highlight {
+    background: rgba(74, 144, 226, 0.05);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+}
+
+/* Stat Row Variants */
+.stat-row.four-cols {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* Alpha Card */
+.alpha-card {
+    background: linear-gradient(135deg, var(--surface-color), rgba(74, 144, 226, 0.05));
+}
+
+.alpha-card p {
+    line-height: 1.6;
+}
+
+/* Badge Variants */
+.badge.success {
+    background-color: rgba(81, 207, 102, 0.1);
+    color: var(--success);
+}
+
+.badge.neutral {
+    background-color: rgba(148, 163, 184, 0.1);
+    color: var(--text-secondary);
+}
+
+/* Charts Container */
+.charts-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.chart-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.chart-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+/* Color Dot for Tables */
+.color-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
+/* Table Footer */
+.simple-table tfoot .total-row {
+    background: var(--bg-color);
+}
+
+.simple-table tfoot .total-row td {
+    border-top: 2px solid var(--border-color);
+}
+
+/* Disclaimer Card */
+.disclaimer {
+    background: rgba(245, 158, 11, 0.05);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.disclaimer h4 {
+    margin-bottom: 0.5rem;
+    color: #f59e0b;
+}
+
+.disclaimer p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Mobile Responsive SIP */
+@media (max-width: 768px) {
+    .preset-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .allocation-slider-group {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-row.four-cols {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .charts-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .preset-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-row.four-cols {
+        grid-template-columns: 1fr;
+    }
+
+    .allocation-mode-toggle {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .mode-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* =============================================================================
+   FUND SELECTION STYLES
+   ============================================================================= */
+
+.funds-allocation {
+    background: var(--bg-color);
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+}
+
+.funds-intro {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.fund-category {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.fund-category:last-of-type {
+    margin-bottom: 1rem;
+    border-bottom: none;
+}
+
+.fund-category-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.category-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.fund-category-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    flex-grow: 1;
+}
+
+.add-fund-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.add-fund-btn:hover {
+    background: var(--primary-dark);
+}
+
+/* Fund Chips */
+.fund-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    min-height: 32px;
+}
+
+.no-funds-hint {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.fund-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    padding: 0.4rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
+.fund-chip-name {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-primary);
+}
+
+.fund-chip-pct {
+    width: 50px;
+    padding: 0.2rem 0.4rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    text-align: center;
+    background: var(--bg-color);
+    color: var(--text-primary);
+}
+
+.fund-chip-pct:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.fund-chip-pct-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.fund-chip-remove {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    margin-left: 0.2rem;
+}
+
+.fund-chip-remove:hover {
+    color: #dc2626;
+}
+
+/* Fund Search */
+.fund-search-container {
+    position: relative;
+    margin-top: 0.5rem;
+}
+
+.fund-search-input {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--surface-color);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.fund-search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.fund-search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 100;
+    margin-top: 4px;
+}
+
+.search-result-item {
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.15s;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background: var(--bg-color);
+}
+
+.search-result-item .fund-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.2rem;
+}
+
+.search-result-item .fund-code {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.search-loading,
+.search-no-results,
+.search-error {
+    padding: 1rem;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.search-error {
+    color: var(--accent);
+}
+
+/* =============================================================================
+   PORTFOLIO COMPARISON STYLES
+   ============================================================================= */
+
+.compare-container {
+    max-width: 1000px;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.portfolio-card {
+    background: var(--surface-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    border: 2px solid var(--border-color);
+}
+
+.portfolio-card.winner {
+    border-color: var(--success);
+    background: rgba(81, 207, 102, 0.03);
+}
+
+.portfolio-card h3 {
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.portfolio-card .crown {
+    font-size: 1.2rem;
+}
+
+.portfolio-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.portfolio-metrics .metric {
+    text-align: center;
+    padding: 0.75rem;
+    background: var(--bg-color);
+    border-radius: var(--radius-md);
+}
+
+.portfolio-type-badge {
+    margin-top: 1rem;
+    padding: 0.4rem 0.8rem;
+    background: var(--bg-color);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* Winner Banner */
+.winner-banner {
+    text-align: center;
+    background: linear-gradient(135deg, rgba(81, 207, 102, 0.1), rgba(74, 144, 226, 0.1));
+    padding: 1.5rem;
+}
+
+.winner-text {
+    font-size: 1.1rem;
+}
+
+.winner-badge {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-weight: 600;
+    margin-right: 0.3rem;
+}
+
+.winner-badge.a {
+    background: rgba(74, 144, 226, 0.2);
+    color: var(--primary);
+}
+
+.winner-badge.b {
+    background: rgba(81, 207, 102, 0.2);
+    color: var(--success);
+}
+
+/* Delta Section */
+.delta-section h3 {
+    margin-bottom: 1rem;
+}
+
+.delta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.delta-item {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-color);
+    border-radius: var(--radius-md);
+}
+
+.delta-item label {
+    display: block;
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+}
+
+.delta-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.delta-item.positive .delta-value {
+    color: var(--success);
+}
+
+.delta-item.negative .delta-value {
+    color: var(--accent);
+}
+
+/* Params Grid */
+.params-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem 2rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .comparison-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .delta-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .portfolio-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .fund-chip {
+        flex-wrap: wrap;
+    }
+
+    .fund-chip-name {
+        max-width: 100%;
+        width: 100%;
+    }
+}
